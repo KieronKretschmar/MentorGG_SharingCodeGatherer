@@ -56,7 +56,7 @@ namespace SharingCodeGatherer
                 {
                     // Set user's authentication as invalid
                     user.Invalidated = true;
-                    _context.Users.Update(user); // TODO: Check if Necessary?
+                    _context.Users.Update(user);
                     await _context.SaveChangesAsync();
                     throw;
                 }
