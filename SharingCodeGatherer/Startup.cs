@@ -18,7 +18,7 @@ namespace SharingCodeGatherer
 {
     /// <summary>
     /// 
-    /// Requires environment variables: ["AMQP_URI", "AMQP_STEAMWORKS_QUEUE", "MYSQL_CONNECTION_STRING"]
+    /// Requires environment variables: ["AMQP_URI", "AMQP_SHARINGCODE_QUEUE", "MYSQL_CONNECTION_STRING"]
     /// </summary>
     public class Startup
     {
@@ -43,7 +43,7 @@ namespace SharingCodeGatherer
             // Create producer
             var connection = new QueueConnection(
                 Configuration.GetValue<string>("AMQP_URI"),
-                Configuration.GetValue<string>("AMQP_STEAMWORKS_QUEUE"));
+                Configuration.GetValue<string>("AMQP_SHARINGCODE_QUEUE"));
 
             services.AddSingleton<Producer<SCG_SWS_Model>>(sp =>
             {
