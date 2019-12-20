@@ -16,6 +16,10 @@ using RabbitTransfer.TransferModels;
 
 namespace SharingCodeGatherer
 {
+    /// <summary>
+    /// 
+    /// Requires environment variables: ["AMQP_URI", "AMQP_STEAMWORKS_QUEUE", "MYSQL_CONNECTION_STRING"]
+    /// </summary>
     public class Startup
     {
         public Startup(IConfiguration configuration)

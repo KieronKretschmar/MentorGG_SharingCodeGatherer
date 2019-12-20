@@ -23,6 +23,7 @@ namespace SharingCodeGatherer
     /// https://developer.valvesoftware.com/wiki/Counter-Strike:_Global_Offensive_Access_Match_History
     /// 
     /// Throws: ExceededApiLimitException, BadUserAuthException, NoMatchesFoundException
+    /// Requires environment variables: ["STEAM_API_KEY"]
     /// </summary>
     public class ValveApiCommunicator : IValveApiCommunicator
     {
