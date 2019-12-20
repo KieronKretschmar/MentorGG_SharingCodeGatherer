@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace SharingCodeGatherer
 {
     /// <summary>
-    /// 
+    /// Holds data regarding a match.
     /// </summary>
     public class MatchData
     {
