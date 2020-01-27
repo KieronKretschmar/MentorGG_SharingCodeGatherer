@@ -56,7 +56,7 @@ namespace SharingCodeGatherer.Controllers
         /// <param name="lastKnownSharingCode"></param>
         /// <returns></returns>
         [HttpPost("{steamId}")]
-        public async Task<ActionResult> PostUser(long steamId, string steamAuthToken, string lastKnownSharingCode)
+        public async Task<ActionResult> CreateUser(long steamId, string steamAuthToken, string lastKnownSharingCode)
         {
             // Create or update user, assuming data is valid and without saving changes before
             var user = await _context.Users.FindAsync(steamId);
@@ -126,7 +126,7 @@ namespace SharingCodeGatherer.Controllers
         /// <param name="steamId"></param>
         /// <returns></returns>
         [HttpPost("{steamId}/look-for-matches")]
-        public async Task<ActionResult<bool>> PostLookForMatches(long steamId)
+        public async Task<ActionResult<bool>> LookForMatches(long steamId)
         {
             // Get user
             var user = _context.Users.Single(x => x.SteamId == steamId);
