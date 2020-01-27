@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace SharingCodeGatherer.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("users")]
     [ApiController]
     public class UsersController : ControllerBase
     {
@@ -26,7 +26,13 @@ namespace SharingCodeGatherer.Controllers
         }
 
 
-        // GET: api/Users/5
+        /// <summary>
+        /// Gets the database entry of the Faceit user with the given steamId.
+        ///
+        /// GET: users/<steamId>
+        /// </summary>
+        /// <param name="steamId"></param>
+        /// <returns></returns>
         [HttpGet("{steamId}")]
         public async Task<ActionResult<User>> GetUser(long steamId)
         {
@@ -39,8 +45,16 @@ namespace SharingCodeGatherer.Controllers
 
             return user;
         }
-               
-        // POST: api/Users/<steamId>
+
+        /// <summary>
+        /// Endpoint for creating a new user (i.e. enabling automatic-upload for this user)
+        /// 
+        /// POST: users/<steamId>?steamAuthToken=XXX&lastKnownSharingCode=YYY
+        /// </summary>
+        /// <param name="steamId"></param>
+        /// <param name="steamAuthToken"></param>
+        /// <param name="lastKnownSharingCode"></param>
+        /// <returns></returns>
         [HttpPost("{steamId}")]
         public async Task<ActionResult> PostUser(long steamId, string steamAuthToken, string lastKnownSharingCode)
         {
@@ -82,7 +96,13 @@ namespace SharingCodeGatherer.Controllers
             return Ok();
         }
 
-        // DELETE: api/Users/<steamId>
+        /// <summary>
+        /// Removes User from database.
+        /// 
+        /// DELETE: /users/<steamId>
+        /// </summary>
+        /// <param name="steamId"></param>
+        /// <returns></returns>
         [HttpDelete("{steamId}")]
         public async Task<ActionResult> DeleteUser(long steamId)
         {
@@ -98,8 +118,14 @@ namespace SharingCodeGatherer.Controllers
             return Ok();
         }
 
-        // GET: api/Users/<steamId>/LookForMatches
-        [HttpPost("{steamId}/LookForMatches")]
+        /// <summary>
+        /// Triggers calls to the Steam API to find new matches of the specified user, and initiates the process of analyzing them.
+        ///
+        /// POST /users/<steamId>/look-for-matches
+        /// </summary>
+        /// <param name="steamId"></param>
+        /// <returns></returns>
+        [HttpPost("{steamId}/look-for-matches")]
         public async Task<ActionResult<bool>> PostLookForMatches(long steamId)
         {
             // Get user
