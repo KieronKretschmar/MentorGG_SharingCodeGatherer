@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using RabbitTransfer.Interfaces;
 using RabbitTransfer.Producer;
 using RabbitTransfer.Queues;
 using RabbitTransfer.TransferModels;
@@ -75,7 +76,7 @@ namespace SharingCodeGatherer
                 Configuration.GetValue<string>("AMQP_URI"),
                 Configuration.GetValue<string>("AMQP_SHARINGCODE_QUEUE"));
 
-            services.AddSingleton<Producer<SCG_SWS_Model>>(sp =>
+            services.AddSingleton<IProducer<SCG_SWS_Model>>(sp =>
             {
                 return new Producer<SCG_SWS_Model>(connection);
             });
