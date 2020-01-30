@@ -71,10 +71,16 @@ namespace SharingCodeGatherer
 
             #region RabbitMQ
 
+            var AMQP_URI = Configuration.GetValue<string>("AMQP_URI");
+            if(AMQP_URI == null)
+                throw new ArgumentException("AMQP_URI is missing, configure the `AMQP_URI` enviroment variable.");
+
+            var AMQP_SHARINGCODE_QUEUE = Configuration.GetValue<string>("AMQP_SHARINGCODE_QUEUE");
+            if (AMQP_SHARINGCODE_QUEUE == null)
+                throw new ArgumentException("AMQP_SHARINGCODE_QUEUE is missing, configure the `AMQP_SHARINGCODE_QUEUE` enviroment variable.");
+
             // Create producer
-            var connection = new QueueConnection(
-                Configuration.GetValue<string>("AMQP_URI"),
-                Configuration.GetValue<string>("AMQP_SHARINGCODE_QUEUE"));
+            var connection = new QueueConnection(AMQP_URI, AMQP_SHARINGCODE_QUEUE);
 
             services.AddSingleton<IProducer<SCG_SWS_Model>>(sp =>
             {
