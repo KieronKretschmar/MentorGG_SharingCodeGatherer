@@ -23,4 +23,6 @@ Steam API Key, required for [Valve's Match History API](https://developer.valves
 - `AMQP_SHARINGCODE_QUEUE` : Rabbit queue's name for producing messages to SharingCodeService [*]
 - `MYSQL_CONNECTION_STRING` : Connection string to SharingCodeGatherer DB[*]
 
+- `IS_MIGRATING` : Boolean to indicate if migration is active
+
 [*] *Required*

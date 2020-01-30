@@ -20,7 +20,7 @@ using RabbitTransfer.TransferModels;
 namespace SharingCodeGatherer
 {
     /// <summary>
-    /// 
+    ///
     /// Requires environment variables: ["AMQP_URI", "AMQP_SHARINGCODE_QUEUE", "MYSQL_CONNECTION_STRING"]
     /// </summary>
     public class Startup
@@ -39,9 +39,36 @@ namespace SharingCodeGatherer
             services.AddControllers();
             services.AddLogging(x => x.AddConsole().AddDebug());
 
+            #region Database
+
+            // if a connectionString is set use mysql, else use InMemory
+            var connString = Configuration.GetValue<string>("MYSQL_CONNECTION_STRING");
+            if (connString != null)
+            {
+                services.AddDbContext<Database.SharingCodeContext>(o => { o.UseMySql(connString); });
+            }
+            else
+            {
+                Console.WriteLine("WARNING: Using in memory database! Is `MYSQL_CONNECTION_STRING` set?");
+                services.AddEntityFrameworkInMemoryDatabase()
+                    .AddDbContext<Database.SharingCodeContext>((sp, options) =>
+                    {
+                        options.UseInMemoryDatabase(databaseName: "MyInMemoryDatabase").UseInternalServiceProvider(sp);
+                    });
+            }
+
+            if (Configuration.GetValue<bool>("IS_MIGRATING"))
+            {
+                Console.WriteLine("WARNING: Migrating!");
+                return;
+            }
+
+            #endregion
+
             services.AddTransient<ISharingCodeWorker, SharingCodeWorker>();
             services.AddSingleton<IValveApiCommunicator, ValveApiCommunicator>();
 
+            #region RabbitMQ
 
             // Create producer
             var connection = new QueueConnection(
@@ -53,20 +80,7 @@ namespace SharingCodeGatherer
                 return new Producer<SCG_SWS_Model>(connection);
             });
 
-            // if a connectionString is set use mysql, else use InMemory
-            var connString = Configuration.GetValue<string>("MYSQL_CONNECTION_STRING");
-            if (connString != null)
-            {
-                services.AddDbContext<Database.SharingCodeContext>(o => { o.UseMySql(connString); });
-            }
-            else
-            {
-                services.AddEntityFrameworkInMemoryDatabase()
-                    .AddDbContext<Database.SharingCodeContext>((sp, options) =>
-                    {
-                        options.UseInMemoryDatabase(databaseName: "MyInMemoryDatabase").UseInternalServiceProvider(sp);
-                    });
-            }
+            #endregion
 
             #region Swagger
             services.AddSwaggerGen(options =>
