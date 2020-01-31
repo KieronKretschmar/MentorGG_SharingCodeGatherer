@@ -81,7 +81,7 @@ namespace SharingCodeGatherer
                     content = await result.Content.ReadAsStringAsync();
                     if (content.Contains(InvalidApiKeyErrorMessage))
                     {
-                        _logger.LogError("Invalid Valve API Key. Response from Valve API: " + content);
+                        _logger.LogError($"SteamAPI returned HTTP {result.StatusCode}. Probably caused by an invalid Valve API Key. Response from Valve API: [ {content} ] ");
                         throw new InvalidApiKeyException("Invalid Valve API Key.");
                     }
                     else
@@ -94,10 +94,11 @@ namespace SharingCodeGatherer
                     }
                 case HttpStatusCode.TooManyRequests:
                 case HttpStatusCode.ServiceUnavailable:
-                    throw new ExceededApiLimitException("Too many calls to SteamAPI. Consider heating up a new instance with a different API key.");
+                    content = await result.Content.ReadAsStringAsync();
+                    throw new ExceededApiLimitException($"Request Failed with HTTP {result.StatusCode}. Either too many calls to SteamAPI were made in a short amount time, or Steam servers are down. Response from Valve API: [ {content} ] ");
                 default:
-                    //_logger.LogError($"Unexpected response by Steam Api. Statuscode: {result.StatusCode}", e);
-                    throw new HttpRequestException($"Unexpected response by Steam Api. Statuscode: {result.StatusCode}");
+                    content = await result.Content.ReadAsStringAsync();
+                    throw new HttpRequestException($"Unexpected response by Steam Api. Statuscode {result.StatusCode} and content [ {content} ] ");
             }
         }
 
