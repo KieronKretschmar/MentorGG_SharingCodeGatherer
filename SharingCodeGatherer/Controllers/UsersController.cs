@@ -7,6 +7,7 @@ using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using RabbitCommunicationLib.Enums;
 
 namespace SharingCodeGatherer.Controllers
 {
@@ -89,10 +90,6 @@ namespace SharingCodeGatherer.Controllers
 
             // Update UserDb
             await _context.SaveChangesAsync();
-
-            // Work on user not skipping the first match
-            await _scWorker.WorkUser(user, false);
-
             return Ok();
         }
 
@@ -126,13 +123,13 @@ namespace SharingCodeGatherer.Controllers
         /// <param name="steamId"></param>
         /// <returns></returns>
         [HttpPost("{steamId}/look-for-matches")]
-        public async Task<ActionResult<bool>> LookForMatches(long steamId)
+        public async Task<ActionResult<bool>> LookForMatches(long steamId, AnalyzerQuality requestedQuality)
         {
             // Get user
             var user = _context.Users.Single(x => x.SteamId == steamId);
             try
             {
-                var foundMatch = await _scWorker.WorkUser(user, true);
+                var foundMatch = await _scWorker.WorkUser(user, requestedQuality, true);
                 return foundMatch;
             }
             catch (ValveApiCommunicator.InvalidUserAuthException e)

@@ -2,6 +2,7 @@
 using Entities.Models;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using RabbitCommunicationLib.Enums;
 using RabbitCommunicationLib.Interfaces;
 using RabbitCommunicationLib.Producer;
 using RabbitCommunicationLib.TransferModels;
@@ -14,7 +15,7 @@ namespace SharingCodeGatherer
 {
     public interface ISharingCodeWorker
     {
-        Task<bool> WorkUser(User user, bool skipLastKnownMatch);
+        Task<bool> WorkUser(User user, AnalyzerQuality requestedQuality, bool skipLastKnownMatch);
     }
 
     /// <summary>
@@ -40,7 +41,7 @@ namespace SharingCodeGatherer
         /// </summary>
         /// <param name="steamId"></param>
         /// <returns name="matchFound">bool, whether at least one new match was found</returns>
-        public async Task<bool> WorkUser(User user, bool skipLastKnownMatch)
+        public async Task<bool> WorkUser(User user, AnalyzerQuality requestedQuality, bool skipLastKnownMatch)
         {
             // Perform work on this or the next match
             bool matchFound;
@@ -49,7 +50,7 @@ namespace SharingCodeGatherer
             {
                 try
                 {
-                    matchFound = await WorkNextSharingCode(user);
+                    matchFound = await WorkNextSharingCode(user, requestedQuality);
                 }
                 catch (ValveApiCommunicator.InvalidUserAuthException)
                 {
@@ -62,7 +63,7 @@ namespace SharingCodeGatherer
             }
             else
             {
-                matchFound = await WorkCurrentSharingCode(user);
+                matchFound = await WorkCurrentSharingCode(user, requestedQuality);
             }
 
 
@@ -70,7 +71,7 @@ namespace SharingCodeGatherer
             _context.SaveChangesAsync();
 
             // Work on all other matches of this user without awaiting the result
-            WorkSharingCodesRecursivelyAndUpdateUser(user);
+            WorkSharingCodesRecursivelyAndUpdateUser(user, requestedQuality);
 
             return matchFound;
         }
@@ -81,16 +82,17 @@ namespace SharingCodeGatherer
         /// </summary>
         /// <param name="user"></param>
         /// <returns>bool, whether a match was found</returns>
-        public async Task<bool> WorkCurrentSharingCode(User user)
+        public async Task<bool> WorkCurrentSharingCode(User user, AnalyzerQuality requestedQuality)
         {
             var match = new MatchData
             {
                 SharingCode = user.LastKnownSharingCode,
                 UploaderId = user.SteamId,
+                AnalyzedQuality = requestedQuality,
             };
 
             // Put match into database and rabbit queue if it's new
-            if (!_context.Matches.Any(x => x.SharingCode == match.SharingCode))
+            if (!_context.Matches.Any(x => (x.SharingCode == match.SharingCode) && x.AnalyzedQuality >= requestedQuality))
             {
                 // Put match into rabbit queue with random correlationId
                 _rabbitProducer.PublishMessage(new Guid().ToString(), match.ToTransferModel());
@@ -107,13 +109,13 @@ namespace SharingCodeGatherer
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        public async Task<bool> WorkNextSharingCode(User user)
+        public async Task<bool> WorkNextSharingCode(User user, AnalyzerQuality requestedQuality)
         {
             bool matchFound;
 
             // Query next SC, throwing exception if none is found
             user.LastKnownSharingCode = await _apiCommunicator.QueryNextSharingCode(user);
-            matchFound = await WorkCurrentSharingCode(user);
+            matchFound = await WorkCurrentSharingCode(user, requestedQuality);
 
             return matchFound;
         }
@@ -123,9 +125,10 @@ namespace SharingCodeGatherer
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        public async Task WorkSharingCodesRecursivelyAndUpdateUser(User user)
+        public async Task WorkSharingCodesRecursivelyAndUpdateUser(User user, AnalyzerQuality requestedQuality)
         {
-            while (await WorkNextSharingCode(user));
+            while (await WorkNextSharingCode(user, requestedQuality))
+                ;
 
             await _context.SaveChangesAsync();
         }
