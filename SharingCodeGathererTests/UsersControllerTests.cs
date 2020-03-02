@@ -50,7 +50,7 @@ namespace SharingCodeGathererTests
             {
                 var usersController = new UsersController(context, mockScWorker.Object, mockApiComm.Object);
 
-                var result = await usersController.PostUser(user.SteamId, user.SteamAuthToken, user.LastKnownSharingCode);
+                var result = await usersController.CreateUser(user.SteamId, user.SteamAuthToken, user.LastKnownSharingCode);
                 Assert.IsInstanceOfType(result, typeof(Microsoft.AspNetCore.Mvc.OkResult));
             }
 
@@ -90,7 +90,7 @@ namespace SharingCodeGathererTests
             {
                 var usersController = new UsersController(context, mockScWorker.Object, mockApiComm.Object);
 
-                var result = await usersController.PostUser(user.SteamId, user.SteamAuthToken, user.LastKnownSharingCode);
+                var result = await usersController.CreateUser(user.SteamId, user.SteamAuthToken, user.LastKnownSharingCode);
                 Assert.IsInstanceOfType(result, typeof(Microsoft.AspNetCore.Mvc.BadRequestResult));
             }
 
@@ -139,7 +139,7 @@ namespace SharingCodeGathererTests
             using (var context = new SharingCodeContext(options))
             {
                 var usersController = new UsersController(context, mockScWorker.Object, mockApiComm.Object);
-                var result = await usersController.PostUser(updatedUser.SteamId, updatedUser.SteamAuthToken, updatedUser.LastKnownSharingCode);
+                var result = await usersController.CreateUser(updatedUser.SteamId, updatedUser.SteamAuthToken, updatedUser.LastKnownSharingCode);
                 Assert.IsInstanceOfType(result, typeof(Microsoft.AspNetCore.Mvc.OkResult));
             }
 
@@ -218,7 +218,7 @@ namespace SharingCodeGathererTests
                 var usersController = new UsersController(context, mockScWorker.Object, mockApiComm.Object);
 
                 // Call LookForMatches
-                var lfmResponse = await usersController.PostLookForMatches(user.SteamId);
+                var lfmResponse = await usersController.LookForMatches(user.SteamId);
                 // Verify that WorkUser was called
                 mockScWorker.Verify(x => x.WorkUser(It.Is<User>(x => x.SteamId == user.SteamId), true), Times.Once);
             }

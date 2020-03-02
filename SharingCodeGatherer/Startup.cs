@@ -13,10 +13,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using RabbitTransfer.Interfaces;
-using RabbitTransfer.Producer;
-using RabbitTransfer.Queues;
-using RabbitTransfer.TransferModels;
+using RabbitCommunicationLib.Interfaces;
+using RabbitCommunicationLib.Producer;
+using RabbitCommunicationLib.Queues;
+using RabbitCommunicationLib.TransferModels;
 
 namespace SharingCodeGatherer
 {
@@ -82,9 +82,9 @@ namespace SharingCodeGatherer
             // Create producer
             var connection = new QueueConnection(AMQP_URI, AMQP_SHARINGCODE_QUEUE);
 
-            services.AddSingleton<IProducer<SCG_SWS_Model>>(sp =>
+            services.AddSingleton<IProducer<SteamInfoInstructions>>(sp =>
             {
-                return new Producer<SCG_SWS_Model>(connection);
+                return new Producer<SteamInfoInstructions>(connection);
             });
 
             #endregion

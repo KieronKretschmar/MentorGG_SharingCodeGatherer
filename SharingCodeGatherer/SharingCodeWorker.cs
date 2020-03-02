@@ -2,9 +2,9 @@
 using Entities.Models;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using RabbitTransfer.Interfaces;
-using RabbitTransfer.Producer;
-using RabbitTransfer.TransferModels;
+using RabbitCommunicationLib.Interfaces;
+using RabbitCommunicationLib.Producer;
+using RabbitCommunicationLib.TransferModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -25,9 +25,9 @@ namespace SharingCodeGatherer
         private ILogger<ISharingCodeWorker> _logger;
         private readonly SharingCodeContext _context;
         private readonly IValveApiCommunicator _apiCommunicator;
-        private readonly IProducer<SCG_SWS_Model> _rabbitProducer;
+        private readonly IProducer<SteamInfoInstructions> _rabbitProducer;
 
-        public SharingCodeWorker(ILogger<ISharingCodeWorker> logger, SharingCodeContext context, IValveApiCommunicator apiCommunicator, IProducer<SCG_SWS_Model> rabbitProducer)
+        public SharingCodeWorker(ILogger<ISharingCodeWorker> logger, SharingCodeContext context, IValveApiCommunicator apiCommunicator, IProducer<SteamInfoInstructions> rabbitProducer)
         {
             _logger = logger;
             _context = context;

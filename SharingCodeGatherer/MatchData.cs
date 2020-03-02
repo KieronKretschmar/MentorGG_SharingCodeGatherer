@@ -1,6 +1,6 @@
 ﻿using Entities.Models;
-using RabbitTransfer.Enums;
-using RabbitTransfer.TransferModels;
+using RabbitCommunicationLib.Enums;
+using RabbitCommunicationLib.TransferModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,9 +16,9 @@ namespace SharingCodeGatherer
         public string SharingCode { get; set; }
         public long UploaderId { get; set; }
 
-        public SCG_SWS_Model ToTransferModel()
+        public SteamInfoInstructions ToTransferModel()
         {
-            return new SCG_SWS_Model
+            return new SteamInfoInstructions
             {
                 UploaderId = UploaderId,
                 SharingCode = SharingCode,
