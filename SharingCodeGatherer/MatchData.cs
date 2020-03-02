@@ -15,7 +15,6 @@ namespace SharingCodeGatherer
     {
         public string SharingCode { get; set; }
         public long UploaderId { get; set; }
-
         public AnalyzerQuality AnalyzedQuality { get; set; }
 
         public SteamInfoInstructions ToTransferModel()
