@@ -15,6 +15,7 @@ namespace SharingCodeGatherer
     {
         public string SharingCode { get; set; }
         public long UploaderId { get; set; }
+        public AnalyzerQuality AnalyzedQuality { get; set; }
 
         public SteamInfoInstructions ToTransferModel()
         {
@@ -23,12 +24,16 @@ namespace SharingCodeGatherer
                 UploaderId = UploaderId,
                 SharingCode = SharingCode,
                 // UploadType is always UploadType.SharingCodeGatherer, as this is the SharingCodeGatherer project
-                UploadType = UploadType.SharingCodeGatherer, 
+                UploadType = UploadType.SharingCodeGatherer,
             };
         }
         public Match ToDatabaseModel()
         {
-            return new Match { SharingCode = SharingCode };
+            return new Match
+            {
+                SharingCode = SharingCode,
+                AnalyzedQuality = AnalyzedQuality
+            };
         }
     }
 }

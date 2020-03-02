@@ -59,7 +59,7 @@ namespace SharingCodeGathererTests
             {
 
             }
-            catch(Exception e)
+            catch
             {
                 Assert.Fail();
             }
