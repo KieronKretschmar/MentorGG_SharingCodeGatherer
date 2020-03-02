@@ -11,6 +11,7 @@ using SharingCodeGatherer.Controllers;
 using SharingCodeGatherer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using RabbitCommunicationLib.Enums;
 
 namespace SharingCodeGathererTests
 {
@@ -54,7 +55,7 @@ namespace SharingCodeGathererTests
                 Assert.IsInstanceOfType(result, typeof(Microsoft.AspNetCore.Mvc.OkResult));
             }
 
-            // Verify that the user was stored in database correctly and WorkUser was called on him
+            // Verify that the user was stored in database correctly
             using (var context = new SharingCodeContext(options))
             {
                 var userFromDb = context.Users.Single();
@@ -62,8 +63,6 @@ namespace SharingCodeGathererTests
                 Assert.IsTrue(userFromDb.LastKnownSharingCode == user.LastKnownSharingCode);
                 Assert.IsTrue(userFromDb.SteamAuthToken == user.SteamAuthToken);
                 Assert.IsTrue(userFromDb.Invalidated == false);
-
-                mockScWorker.Verify(x => x.WorkUser(It.Is<User>(x=>x.SteamId == user.SteamId), false), Times.Once());
             }
         }
 
@@ -94,12 +93,11 @@ namespace SharingCodeGathererTests
                 Assert.IsInstanceOfType(result, typeof(Microsoft.AspNetCore.Mvc.BadRequestResult));
             }
 
-            // Verify that the user was not stored in database correctly and WorkUser was not called on him
+            // Verify that the user was not stored in database correctly
             using (var context = new SharingCodeContext(options))
             {
                 var userIsInDb = context.Users.Any();
                 Assert.IsFalse(userIsInDb);
-                mockScWorker.Verify(x => x.WorkUser(It.IsAny<User>(), It.IsAny<bool>()), Times.Never());
             }
         }
 
@@ -140,10 +138,11 @@ namespace SharingCodeGathererTests
             {
                 var usersController = new UsersController(context, mockScWorker.Object, mockApiComm.Object);
                 var result = await usersController.CreateUser(updatedUser.SteamId, updatedUser.SteamAuthToken, updatedUser.LastKnownSharingCode);
+
                 Assert.IsInstanceOfType(result, typeof(Microsoft.AspNetCore.Mvc.OkResult));
             }
 
-            // Verify that the updated user, and only the updated user was stored in database correctly and WorkUser was called on him
+            // Verify that the updated user, and only the updated user was stored in database correctly
             using (var context = new SharingCodeContext(options))
             {
                 var userFromDb = context.Users.Single();
@@ -151,8 +150,6 @@ namespace SharingCodeGathererTests
                 Assert.IsTrue(userFromDb.LastKnownSharingCode == updatedUser.LastKnownSharingCode);
                 Assert.IsTrue(userFromDb.SteamAuthToken == updatedUser.SteamAuthToken);
                 Assert.IsTrue(userFromDb.Invalidated == false);
-
-                mockScWorker.Verify(x => x.WorkUser(It.Is<User>(x=>x.SteamAuthToken == updatedUser.SteamAuthToken), false), Times.Once()); 
             }
         }
 
@@ -202,6 +199,7 @@ namespace SharingCodeGathererTests
         {
             var options = TestHelper.GetDatabaseOptions("LookForMatchesTest");
             var user = TestHelper.GetRandomUser();
+            var analyzerQuality = AnalyzerQuality.High;
 
             // Create valid user
             using (var context = new SharingCodeContext(options))
@@ -218,9 +216,9 @@ namespace SharingCodeGathererTests
                 var usersController = new UsersController(context, mockScWorker.Object, mockApiComm.Object);
 
                 // Call LookForMatches
-                var lfmResponse = await usersController.LookForMatches(user.SteamId);
+                var lfmResponse = await usersController.LookForMatches(user.SteamId, analyzerQuality);
                 // Verify that WorkUser was called
-                mockScWorker.Verify(x => x.WorkUser(It.Is<User>(x => x.SteamId == user.SteamId), true), Times.Once);
+                mockScWorker.Verify(x => x.WorkUser(It.Is<User>(x => x.SteamId == user.SteamId),analyzerQuality, true), Times.Once);
             }
         }
     }

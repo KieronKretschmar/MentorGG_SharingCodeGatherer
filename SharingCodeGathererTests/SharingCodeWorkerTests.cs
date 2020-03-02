@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using RabbitCommunicationLib.Enums;
 using RabbitCommunicationLib.Interfaces;
 using RabbitCommunicationLib.TransferModels;
 using SharingCodeGatherer;
@@ -66,7 +67,7 @@ namespace SharingCodeGathererTests
                 // Call LookForMatches and expect UnauthorizedException
                 await Assert.ThrowsExceptionAsync<ValveApiCommunicator.InvalidUserAuthException>(async () =>
                 {
-                    await scWorker.WorkUser(user, true);
+                    await scWorker.WorkUser(user,AnalyzerQuality.Low, true);
                 });
             }
 
@@ -116,7 +117,7 @@ namespace SharingCodeGathererTests
 
                await Assert.ThrowsExceptionAsync<ValveApiCommunicator.InvalidApiKeyException>(async () =>
                {
-                   await scWorker.WorkUser(user, true);
+                   await scWorker.WorkUser(user, AnalyzerQuality.Low,true);
                });
             }
 
