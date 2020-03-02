@@ -5,8 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using RabbitTransfer.Interfaces;
-using RabbitTransfer.TransferModels;
+using RabbitCommunicationLib.Interfaces;
+using RabbitCommunicationLib.TransferModels;
 using SharingCodeGatherer;
 using System;
 using System.Collections.Generic;
@@ -51,7 +51,7 @@ namespace SharingCodeGathererTests
                 .Setup(x => x.QueryNextSharingCode(It.Is<User>(x => x.SteamId == user.SteamId)))
                 .Throws(new ValveApiCommunicator.InvalidUserAuthException(""));
 
-            var mockRabbit = new Mock<IProducer<SCG_SWS_Model>>();
+            var mockRabbit = new Mock<IProducer<SteamInfoInstructions>>();
 
             // Work user and check for InvalidUserAuthException exception
             using (var context = new SharingCodeContext(options))
@@ -102,7 +102,7 @@ namespace SharingCodeGathererTests
                 .Setup(x => x.QueryNextSharingCode(It.Is<User>(x => x.SteamId == user.SteamId)))
                 .Throws(new ValveApiCommunicator.InvalidApiKeyException(""));
 
-            var mockRabbit = new Mock<IProducer<SCG_SWS_Model>>();
+            var mockRabbit = new Mock<IProducer<SteamInfoInstructions>>();
 
             // Work user and check for InvalidApiKeyException exception
             using (var context = new SharingCodeContext(options))
