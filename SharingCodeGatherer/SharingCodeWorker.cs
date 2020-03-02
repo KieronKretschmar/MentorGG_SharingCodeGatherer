@@ -37,7 +37,6 @@ namespace SharingCodeGatherer
 
         /// <summary>
         /// Gathers all matches of this user and inserts them into database and rabbit queue, and also updates the user's LastKnownSharingCode in database.
-        /// If the authdata is faulty, user is removed from database.
         /// </summary>
         /// <param name="steamId"></param>
         /// <returns name="matchFound">bool, whether at least one new match was found</returns>
