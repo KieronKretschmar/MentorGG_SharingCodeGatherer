@@ -12,3 +12,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ###Changed
 - Logging with correct timestamp
 - Startup throws exceptions on missing env vars
+- Startup runs migrations

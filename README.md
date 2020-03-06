@@ -12,3 +12,6 @@ Steam API Key, required for [Valve's Match History API](https://developer.valves
 - `IS_MIGRATING` : Boolean to indicate if migration is active
 
 [*] *Required*
+
+## Additional Information
+- Upon Startup, this project runs migrations on MatchDb.
