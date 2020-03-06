@@ -82,9 +82,9 @@ namespace SharingCodeGatherer
             // Create producer
             var connection = new QueueConnection(AMQP_URI, AMQP_SHARINGCODE_QUEUE);
 
-            services.AddSingleton<IProducer<SteamInfoInstructions>>(sp =>
+            services.AddSingleton<IProducer<SharingCodeInstruction>>(sp =>
             {
-                return new Producer<SteamInfoInstructions>(connection);
+                return new Producer<SharingCodeInstruction>(connection);
             });
 
             #endregion

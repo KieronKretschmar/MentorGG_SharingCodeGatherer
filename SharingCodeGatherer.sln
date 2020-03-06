@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharingCodeGatherer", "Shar
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharingCodeGathererTests", "SharingCodeGathererTests\SharingCodeGathererTests.csproj", "{2F4A80DF-1E6A-4C78-A698-E7179C9DD149}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabbitCommunicationLib", "rabbitcommunicationlib\RabbitCommunicationLib.csproj", "{A1A8468D-A3B6-4CCC-8EB8-E70722956518}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabbitCommunicationLib", "RabbitCommunicationLib\RabbitCommunicationLib.csproj", "{6036427D-B9AA-4D9F-A261-70E7AAA7BE48}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,10 +35,10 @@ Global
 		{2F4A80DF-1E6A-4C78-A698-E7179C9DD149}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F4A80DF-1E6A-4C78-A698-E7179C9DD149}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F4A80DF-1E6A-4C78-A698-E7179C9DD149}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A1A8468D-A3B6-4CCC-8EB8-E70722956518}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A1A8468D-A3B6-4CCC-8EB8-E70722956518}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A1A8468D-A3B6-4CCC-8EB8-E70722956518}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A1A8468D-A3B6-4CCC-8EB8-E70722956518}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6036427D-B9AA-4D9F-A261-70E7AAA7BE48}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6036427D-B9AA-4D9F-A261-70E7AAA7BE48}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6036427D-B9AA-4D9F-A261-70E7AAA7BE48}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6036427D-B9AA-4D9F-A261-70E7AAA7BE48}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

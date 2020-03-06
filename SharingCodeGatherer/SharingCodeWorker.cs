@@ -26,9 +26,9 @@ namespace SharingCodeGatherer
         private ILogger<ISharingCodeWorker> _logger;
         private readonly SharingCodeContext _context;
         private readonly IValveApiCommunicator _apiCommunicator;
-        private readonly IProducer<SteamInfoInstructions> _rabbitProducer;
+        private readonly IProducer<SharingCodeInstruction> _rabbitProducer;
 
-        public SharingCodeWorker(ILogger<ISharingCodeWorker> logger, SharingCodeContext context, IValveApiCommunicator apiCommunicator, IProducer<SteamInfoInstructions> rabbitProducer)
+        public SharingCodeWorker(ILogger<ISharingCodeWorker> logger, SharingCodeContext context, IValveApiCommunicator apiCommunicator, IProducer<SharingCodeInstruction> rabbitProducer)
         {
             _logger = logger;
             _context = context;
@@ -95,7 +95,7 @@ namespace SharingCodeGatherer
             if (!_context.Matches.Any(x => (x.SharingCode == match.SharingCode) && x.AnalyzedQuality >= requestedQuality))
             {
                 // Put match into rabbit queue with random correlationId
-                _rabbitProducer.PublishMessage(new Guid().ToString(), match.ToTransferModel());
+                _rabbitProducer.PublishMessage(match.ToTransferModel());
 
                 // put match into database
                 await _context.Matches.AddAsync(match.ToDatabaseModel());

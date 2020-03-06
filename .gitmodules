@@ -1,5 +1,5 @@
-[submodule "rabbitcommunicationlib"]
-	path = rabbitcommunicationlib
+[submodule "RabbitCommunicationLib"]
+	path = RabbitCommunicationLib
 	url = ../../engine/RabbitCommunicationLib.git
 [submodule "steamworksconnection"]
 	path = steamworksconnection
