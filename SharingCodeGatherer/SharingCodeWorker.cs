@@ -94,6 +94,8 @@ namespace SharingCodeGatherer
             // Put match into database and rabbit queue if it's new
             if (!_context.Matches.Any(x => (x.SharingCode == match.SharingCode) && x.AnalyzedQuality >= requestedQuality))
             {
+                _logger.LogInformation($"Publishing model with SharingCode [ {match.SharingCode} ] from uploader#{match.UploaderId} to queue.");
+
                 // Put match into rabbit queue with random correlationId
                 _rabbitProducer.PublishMessage(match.ToTransferModel());
 
