@@ -6,6 +6,10 @@ WORKDIR /app
 
 # Copy csproj and restore as distinct layers
 
+WORKDIR /app/RabbitCommunicationLib
+COPY ./RabbitCommunicationLib/*.csproj ./
+RUN dotnet restore
+
 WORKDIR /app/Entities
 COPY ./Entities/*.csproj ./
 RUN dotnet restore
@@ -14,20 +18,16 @@ WORKDIR /app/Database
 COPY ./Database/*.csproj ./
 RUN dotnet restore
 
-WORKDIR /app/RabbitCommunicationLib
-COPY ./RabbitCommunicationLib/*.csproj ./
-RUN dotnet restore
-
 WORKDIR /app/SharingCodeGatherer
 COPY ./SharingCodeGatherer/*.csproj ./
 RUN dotnet restore
 
 # Copy everything else and build
 WORKDIR /app
+COPY ./RabbitCommunicationLib ./RabbitCommunicationLib
 COPY ./SharingCodeGatherer/ ./SharingCodeGatherer
 COPY ./Database/ ./Database
 COPY ./Entities ./Entities
-COPY ./RabbitCommunicationLib ./RabbitCommunicationLib
 
 RUN dotnet publish SharingCodeGatherer/ -c Release -o out
 
