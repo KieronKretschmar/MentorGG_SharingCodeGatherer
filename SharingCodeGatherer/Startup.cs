@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Database;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -38,7 +39,15 @@ namespace SharingCodeGatherer
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddLogging(x => x.AddConsole().AddDebug());
+
+            services.AddLogging(services =>
+            {
+                services.AddConsole(o =>
+                {
+                    o.TimestampFormat = "[yyyy-MM-dd HH:mm:ss zzz] ";
+                });
+                services.AddDebug();
+            });
 
             #region Database
 
@@ -82,9 +91,9 @@ namespace SharingCodeGatherer
             // Create producer
             var connection = new QueueConnection(AMQP_URI, AMQP_SHARINGCODE_QUEUE);
 
-            services.AddSingleton<IProducer<SteamInfoInstructions>>(sp =>
+            services.AddSingleton<IProducer<SharingCodeInstruction>>(sp =>
             {
-                return new Producer<SteamInfoInstructions>(connection);
+                return new Producer<SharingCodeInstruction>(connection);
             });
 
             #endregion
@@ -108,7 +117,7 @@ namespace SharingCodeGatherer
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider services)
         {
             if (env.IsDevelopment())
             {
@@ -133,6 +142,11 @@ namespace SharingCodeGatherer
             });
             #endregion
 
+            // migrate if this is not an inmemory database
+            if (services.GetRequiredService<SharingCodeContext>().Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory")
+            {
+                services.GetRequiredService<SharingCodeContext>().Database.Migrate();
+            }
         }
     }
 }
