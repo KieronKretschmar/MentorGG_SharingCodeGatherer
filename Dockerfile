@@ -14,8 +14,8 @@ WORKDIR /app/Database
 COPY ./Database/*.csproj ./
 RUN dotnet restore
 
-WORKDIR /app/rabbitcommunicationlib
-COPY ./rabbitcommunicationlib/*.csproj ./
+WORKDIR /app/RabbitCommunicationLib
+COPY ./RabbitCommunicationLib/*.csproj ./
 RUN dotnet restore
 
 WORKDIR /app/SharingCodeGatherer
@@ -27,7 +27,7 @@ WORKDIR /app
 COPY ./SharingCodeGatherer/ ./SharingCodeGatherer
 COPY ./Database/ ./Database
 COPY ./Entities ./Entities
-COPY ./rabbitcommunicationlib ./rabbitcommunicationlib
+COPY ./RabbitCommunicationLib ./RabbitCommunicationLib
 
 RUN dotnet publish SharingCodeGatherer/ -c Release -o out
 

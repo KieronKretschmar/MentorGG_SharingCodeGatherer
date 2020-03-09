@@ -52,7 +52,7 @@ namespace SharingCodeGathererTests
                 .Setup(x => x.QueryNextSharingCode(It.Is<User>(x => x.SteamId == user.SteamId)))
                 .Throws(new ValveApiCommunicator.InvalidUserAuthException(""));
 
-            var mockRabbit = new Mock<IProducer<SteamInfoInstructions>>();
+            var mockRabbit = new Mock<IProducer<SharingCodeInstruction>>();
 
             // Work user and check for InvalidUserAuthException exception
             using (var context = new SharingCodeContext(options))
@@ -103,7 +103,7 @@ namespace SharingCodeGathererTests
                 .Setup(x => x.QueryNextSharingCode(It.Is<User>(x => x.SteamId == user.SteamId)))
                 .Throws(new ValveApiCommunicator.InvalidApiKeyException(""));
 
-            var mockRabbit = new Mock<IProducer<SteamInfoInstructions>>();
+            var mockRabbit = new Mock<IProducer<SharingCodeInstruction>>();
 
             // Work user and check for InvalidApiKeyException exception
             using (var context = new SharingCodeContext(options))

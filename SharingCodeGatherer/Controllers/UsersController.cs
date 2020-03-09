@@ -28,9 +28,7 @@ namespace SharingCodeGatherer.Controllers
 
 
         /// <summary>
-        /// Gets the database entry of the Faceit user with the given steamId.
-        ///
-        /// GET: users/<steamId>
+        /// Gets the database entry of the user with the given steamId.
         /// </summary>
         /// <param name="steamId"></param>
         /// <returns></returns>
@@ -48,9 +46,7 @@ namespace SharingCodeGatherer.Controllers
         }
 
         /// <summary>
-        /// Endpoint for creating a new user (i.e. enabling automatic-upload for this user)
-        /// 
-        /// POST: users/<steamId>?steamAuthToken=XXX&lastKnownSharingCode=YYY
+        /// Adds user to database and thereby enables automatic-upload for him.
         /// </summary>
         /// <param name="steamId"></param>
         /// <param name="steamAuthToken"></param>
@@ -94,9 +90,7 @@ namespace SharingCodeGatherer.Controllers
         }
 
         /// <summary>
-        /// Removes User from database.
-        /// 
-        /// DELETE: /users/<steamId>
+        /// Removes User from database and thereby disables automatic upload.
         /// </summary>
         /// <param name="steamId"></param>
         /// <returns></returns>
@@ -117,8 +111,6 @@ namespace SharingCodeGatherer.Controllers
 
         /// <summary>
         /// Triggers calls to the Steam API to find new matches of the specified user, and initiates the process of analyzing them.
-        ///
-        /// POST /users/<steamId>/look-for-matches
         /// </summary>
         /// <param name="steamId"></param>
         /// <returns></returns>
