@@ -49,6 +49,22 @@ namespace SharingCodeGatherer
                 services.AddDebug();
             });
 
+            #region Swagger
+            services.AddSwaggerGen(options =>
+            {
+                OpenApiInfo interface_info = new OpenApiInfo { Title = "SharingCodeGatherer", Version = "v1", };
+                options.SwaggerDoc("v1", interface_info);
+
+                // Generate documentation based on the XML Comments provided.
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                options.IncludeXmlComments(xmlPath);
+
+                // Optionally, if installed, enable annotations
+                options.EnableAnnotations();
+            });
+            #endregion
+
             #region Database
 
             // if a connectionString is set use mysql, else use InMemory
@@ -98,21 +114,6 @@ namespace SharingCodeGatherer
 
             #endregion
 
-            #region Swagger
-            services.AddSwaggerGen(options =>
-            {
-                OpenApiInfo interface_info = new OpenApiInfo { Title = "SharingCodeGatherer", Version = "v1", };
-                options.SwaggerDoc("v1", interface_info);
-
-                // Generate documentation based on the XML Comments provided.
-                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-                options.IncludeXmlComments(xmlPath);
-
-                // Optionally, if installed, enable annotations
-                options.EnableAnnotations();
-            });
-            #endregion
 
         }
 
