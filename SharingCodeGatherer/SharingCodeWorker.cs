@@ -100,7 +100,10 @@ namespace SharingCodeGatherer
                 _rabbitProducer.PublishMessage(match.ToTransferModel());
 
                 // put match into database
-                await _context.Matches.AddAsync(match.ToDatabaseModel());
+                var dbMatch = match.ToDatabaseModel();
+                _logger.LogInformation($"Inserting match with SharingCode [ {match.SharingCode} ] into database.");
+                await _context.Matches.AddAsync(dbMatch);
+                await _context.SaveChangesAsync();
                 return true;
             }
             return false;
