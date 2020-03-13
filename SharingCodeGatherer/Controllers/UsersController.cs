@@ -126,7 +126,7 @@ namespace SharingCodeGatherer.Controllers
             }
             catch (ValveApiCommunicator.InvalidUserAuthException e)
             {
-                return Unauthorized();
+                return Unauthorized("Invalid Auth data.");
             }
         }
     }
