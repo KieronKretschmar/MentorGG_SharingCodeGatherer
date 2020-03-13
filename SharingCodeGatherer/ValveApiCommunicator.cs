@@ -49,6 +49,10 @@ namespace SharingCodeGatherer
             {
                 var nextCode = await QueryNextSharingCode(user);
             }
+            catch (NoMatchesFoundException)
+            {
+                return true;
+            }
             catch (InvalidUserAuthException)
             {
                 return false;

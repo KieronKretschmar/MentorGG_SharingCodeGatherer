@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static SharingCodeGatherer.ValveApiCommunicator;
 
 namespace SharingCodeGatherer
 {
@@ -113,16 +114,19 @@ namespace SharingCodeGatherer
         /// Attempts to get the next sharingCode and perform work on it.
         /// </summary>
         /// <param name="user"></param>
-        /// <returns></returns>
+        /// <returns>bool, whether a match was found and inserted into the database</returns>
         public async Task<bool> WorkNextSharingCode(User user, AnalyzerQuality requestedQuality)
         {
-            bool matchFound;
-
-            // Query next SC, throwing exception if none is found
-            user.LastKnownSharingCode = await _apiCommunicator.QueryNextSharingCode(user);
-            matchFound = await WorkCurrentSharingCode(user, requestedQuality);
-
-            return matchFound;
+            try
+            {
+                user.LastKnownSharingCode = await _apiCommunicator.QueryNextSharingCode(user);
+                var matchFound = await WorkCurrentSharingCode(user, requestedQuality);
+                return matchFound;
+            }
+            catch (NoMatchesFoundException e)
+            {
+                return false;
+            }
         }
 
         /// <summary>
