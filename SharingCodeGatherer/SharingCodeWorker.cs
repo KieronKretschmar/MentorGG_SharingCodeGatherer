@@ -89,7 +89,7 @@ namespace SharingCodeGatherer
         /// <returns>bool, whether a match was found</returns>
         public async Task<bool> WorkCurrentSharingCode(User user, AnalyzerQuality requestedQuality)
         {
-            _logger.LogInformation($"Starting to work current SharingCode [ {user.LastKnownSharingCode} ] of uploader#{user.SteamId}, requestedQuality [ {requestedQuality} ].");
+            _logger.LogInformation($"Starting to work current SharingCode [ {user.LastKnownSharingCode} ] of uploader with SteamId [ {user.SteamId} ], requestedQuality [ {requestedQuality} ].");
             var match = new MatchData
             {
                 SharingCode = user.LastKnownSharingCode,
@@ -100,7 +100,7 @@ namespace SharingCodeGatherer
             // Put match into database and rabbit queue if it's new
             if (!_context.Matches.Any(x => (x.SharingCode == match.SharingCode) && x.AnalyzedQuality >= requestedQuality))
             {
-                _logger.LogInformation($"Publishing model with SharingCode [ {match.SharingCode} ] from uploader#{match.UploaderId} to queue.");
+                _logger.LogInformation($"Publishing model with SharingCode [ {match.SharingCode} ] from uploader with SteamId [ {user.SteamId} ] to queue.");
 
                 // Put match into rabbit queue with random correlationId
                 _rabbitProducer.PublishMessage(match.ToTransferModel());
@@ -114,7 +114,7 @@ namespace SharingCodeGatherer
             }
             else
             {
-                _logger.LogInformation($"SharingCode [ {match.SharingCode} ] from uploader#{match.UploaderId} already exists and does not need to be re-published.");
+                _logger.LogInformation($"SharingCode [ {match.SharingCode} ] from uploader with SteamId [ {match.UploaderId} ] already exists and does not need to be re-published.");
             }
             return false;
         }
