@@ -44,6 +44,8 @@ namespace SharingCodeGatherer
         /// <returns name="matchFound">bool, whether at least one new match was found</returns>
         public async Task<bool> WorkUser(User user, AnalyzerQuality requestedQuality, bool skipLastKnownMatch)
         {
+            _logger.LogInformation($"Working user with SteamId [ {user.SteamId} ], requestedQuality [ {requestedQuality} ] and skipLastKnownMatch [ {skipLastKnownMatch} ]");
+
             // Perform work on this or the next match
             bool matchFound;
 
@@ -74,6 +76,8 @@ namespace SharingCodeGatherer
             // Work on all other matches of this user without awaiting the result
             WorkSharingCodesRecursivelyAndUpdateUser(user, requestedQuality);
 
+            _logger.LogInformation($"Finished working user with SteamId [ {user.SteamId} ]");
+
             return matchFound;
         }
 
@@ -85,6 +89,7 @@ namespace SharingCodeGatherer
         /// <returns>bool, whether a match was found</returns>
         public async Task<bool> WorkCurrentSharingCode(User user, AnalyzerQuality requestedQuality)
         {
+            _logger.LogInformation($"Starting to work current SharingCode [ {user.LastKnownSharingCode} ] of uploader#{user.SteamId}, requestedQuality [ {requestedQuality} ].");
             var match = new MatchData
             {
                 SharingCode = user.LastKnownSharingCode,
@@ -106,6 +111,10 @@ namespace SharingCodeGatherer
                 await _context.Matches.AddAsync(dbMatch);
                 await _context.SaveChangesAsync();
                 return true;
+            }
+            else
+            {
+                _logger.LogInformation($"SharingCode [ {match.SharingCode} ] from uploader#{match.UploaderId} already exists and does not need to be re-published.");
             }
             return false;
         }

@@ -62,6 +62,7 @@ namespace SharingCodeGatherer
 
         public async Task<string> QueryNextSharingCode(User user)
         {
+            _logger.LogInformation($"Looking for the next SharingCode following [ {user.LastKnownSharingCode} ] from uploader#{user.SteamId}.");
             var queryString = "https://api.steampowered.com/ICSGOPlayers_730/GetNextMatchSharingCode/v1?";
             queryString += $"key={ApiKey}&steamidkey={user.SteamAuthToken}&steamid={user.SteamId}&knowncode={user.LastKnownSharingCode}";
 
@@ -80,6 +81,7 @@ namespace SharingCodeGatherer
                     {
                         throw new NoMatchesFoundException($"No new matches found for user {user.SteamId}");
                     }
+                    _logger.LogInformation($"Found new SharingCode [ {nextCode} ] following [ {user.LastKnownSharingCode} ] from uploader#{user.SteamId}.");
                     return nextCode;
                 case HttpStatusCode.Forbidden:
                     content = await result.Content.ReadAsStringAsync();
