@@ -74,7 +74,7 @@ namespace SharingCodeGatherer
             _context.SaveChangesAsync();
 
             // Work on all other matches of this user without awaiting the result
-            WorkSharingCodesRecursivelyAndUpdateUser(user, requestedQuality);
+            WorkAllNewSharingCodesAndUpdateUser(user, requestedQuality);
 
             _logger.LogInformation($"Finished working user with SteamId [ {user.SteamId} ]");
 
@@ -82,10 +82,8 @@ namespace SharingCodeGatherer
         }
 
         /// <summary>
-        /// Does work on the match of the currently set LastKnownSharingCode.
-        /// This implies: Getting the next sharingCode, updating the user object without saving changes to database, and, if a match is found, putting it into rabbit queue and database.
+        /// Determines whether the match belonging to the given sharingCode needs to be (re-)analyzed. In that case it is stored in the database and published to rabbit.
         /// </summary>
-        /// <param name="user"></param>
         /// <returns>bool, whether the sharingcode was published to be (re-)analyzed.</returns>
         public async Task<bool> WorkSharingCode(string currentSharingCode, long uploaderId, AnalyzerQuality requestedQuality)
         {
@@ -120,7 +118,7 @@ namespace SharingCodeGatherer
         }
 
         /// <summary>
-        /// Attempts to get the next sharingCode and perform work on it.
+        /// Attempts to get the next sharingcode and, if found, updates user.LastKnownSharingCode (without writing to db) and runs WorkSharingCode on it. 
         /// </summary>
         /// <param name="user"></param>
         /// <returns>bool, whether a next sharingcode was found for this user</returns>
@@ -144,15 +142,17 @@ namespace SharingCodeGatherer
         }
 
         /// <summary>
-        /// Does work on all matches that happened after the match of the currently set LastKnownSharingCode recursively.
+        /// Runs WorkNextSharingCode as long as new sharingcodes are found.
+        /// Also writes the newest user.LastKnownSharingCode to database.
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        public async Task WorkSharingCodesRecursivelyAndUpdateUser(User user, AnalyzerQuality requestedQuality)
+        public async Task WorkAllNewSharingCodesAndUpdateUser(User user, AnalyzerQuality requestedQuality)
         {
-            while (await WorkNextSharingCode(user, requestedQuality))
-                ;
+            // Work next sharingcode until we've reached the newest one of this user
+            while (await WorkNextSharingCode(user, requestedQuality));
 
+            // call saveChanges to write newest value for user.LastKnownSharingCode to database
             await _context.SaveChangesAsync();
         }
     }
