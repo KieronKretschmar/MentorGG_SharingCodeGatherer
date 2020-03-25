@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RabbitCommunicationLib.Enums;
+using static SharingCodeGatherer.ValveApiCommunicator;
 
 namespace SharingCodeGatherer.Controllers
 {
@@ -17,13 +18,13 @@ namespace SharingCodeGatherer.Controllers
     {
         private readonly SharingCodeContext _context;
         private readonly ISharingCodeWorker _scWorker;
-        private readonly IValveApiCommunicator _valveApiCommunicator;
+        private readonly IValveApiCommunicator _apiCommunicator;
 
         public UsersController(SharingCodeContext context, ISharingCodeWorker scWorker, IValveApiCommunicator valveApiCommunicator)
         {
             _context = context;
             _scWorker = scWorker;
-            _valveApiCommunicator = valveApiCommunicator;
+            _apiCommunicator = valveApiCommunicator;
         }
 
 
@@ -79,7 +80,7 @@ namespace SharingCodeGatherer.Controllers
 
 
             // Validate data
-            if (await _valveApiCommunicator.ValidateAuthData(user) == false)
+            if (await _apiCommunicator.ValidateAuthData(user) == false)
             {
                 return BadRequest();
             }
@@ -121,8 +122,25 @@ namespace SharingCodeGatherer.Controllers
             var user = _context.Users.Single(x => x.SteamId == steamId);
             try
             {
-                var foundMatch = await _scWorker.WorkUser(user, requestedQuality);
-                return foundMatch;
+                // determine whether new sharingcodes exist for this user
+                bool foundNewSharingCode;
+                try
+                {
+                    string newSharingCode = await _apiCommunicator.QueryNextSharingCode(user);
+                    foundNewSharingCode = true;
+                }
+                catch (NoMatchesFoundException)
+                {
+                    foundNewSharingCode = false;
+                }
+
+                // perform work if at least one new sharingcode exist
+                if (foundNewSharingCode)
+                {
+                    // Work on all other matches of this user without awaiting the result
+                    _scWorker.WorkUser(user, requestedQuality);
+                }
+                return foundNewSharingCode;
             }
             catch (ValveApiCommunicator.InvalidUserAuthException e)
             {
