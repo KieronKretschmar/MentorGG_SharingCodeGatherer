@@ -86,6 +86,7 @@ namespace SharingCodeGatherer
                 // attempt to get next sharingcode
                 user.LastKnownSharingCode = await _apiCommunicator.QueryNextSharingCode(user);
                 foundNextSharingCode = true;
+                await _context.SaveChangesAsync();
 
                 // try to insert match into database if this code was never seen before
                 var matchPublished = await WorkSharingCode(user.LastKnownSharingCode, user.SteamId, requestedQuality);
