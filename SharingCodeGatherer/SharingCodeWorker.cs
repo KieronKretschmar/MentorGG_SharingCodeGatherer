@@ -41,66 +41,53 @@ namespace SharingCodeGatherer
         /// Gathers all matches of this user and inserts them into database and rabbit queue, and also updates the user's LastKnownSharingCode in database.
         /// </summary>
         /// <param name="steamId"></param>
-        /// <returns name="matchFound">bool, whether at least one new match was found</returns>
+        /// <returns name="foundNewSharingCode">bool, whether at least one new match was found</returns>
         public async Task<bool> WorkUser(User user, AnalyzerQuality requestedQuality, bool skipLastKnownMatch)
         {
             _logger.LogInformation($"Working user with SteamId [ {user.SteamId} ], requestedQuality [ {requestedQuality} ] and skipLastKnownMatch [ {skipLastKnownMatch} ]");
 
-            // Perform work on this or the next match
-            bool matchFound;
-
-            if (skipLastKnownMatch)
+            // determine whether new sharingcodes exist for this user
+            bool foundNewSharingCode;
+            try
             {
-                try
-                {
-                    matchFound = await WorkNextSharingCode(user, requestedQuality);
-                }
-                catch (ValveApiCommunicator.InvalidUserAuthException)
-                {
-                    // Set user's authentication as invalid
-                    user.Invalidated = true;
-                    _context.Users.Update(user);
-                    await _context.SaveChangesAsync();
-                    throw;
-                }
+                string newSharingCode = await _apiCommunicator.QueryNextSharingCode(user);
+                foundNewSharingCode = true;
             }
-            else
+            catch (NoMatchesFoundException)
             {
-                matchFound = await WorkCurrentSharingCode(user, requestedQuality);
+                foundNewSharingCode = false;
             }
 
+            // perform work if at least one new sharingcode exist
+            if (foundNewSharingCode)
+            {
+                // Work on all other matches of this user without awaiting the result
+                WorkAllNewSharingCodesAndUpdateUser(user, requestedQuality, skipLastKnownMatch);
 
-            // Update user
-            _context.SaveChangesAsync();
+                _logger.LogInformation($"Finished working user with SteamId [ {user.SteamId} ]");
+            }
 
-            // Work on all other matches of this user without awaiting the result
-            WorkSharingCodesRecursivelyAndUpdateUser(user, requestedQuality);
-
-            _logger.LogInformation($"Finished working user with SteamId [ {user.SteamId} ]");
-
-            return matchFound;
+            return foundNewSharingCode;
         }
 
         /// <summary>
-        /// Does work on the match of the currently set LastKnownSharingCode.
-        /// This implies: Getting the next sharingCode, updating the user object without saving changes to database, and, if a match is found, putting it into rabbit queue and database.
+        /// Determines whether the match belonging to the given sharingCode needs to be (re-)analyzed. In that case it is stored in the database and published to rabbit.
         /// </summary>
-        /// <param name="user"></param>
-        /// <returns>bool, whether a match was found</returns>
-        public async Task<bool> WorkCurrentSharingCode(User user, AnalyzerQuality requestedQuality)
+        /// <returns>bool, whether the sharingcode was published to be (re-)analyzed.</returns>
+        public async Task<bool> WorkSharingCode(string currentSharingCode, long uploaderId, AnalyzerQuality requestedQuality)
         {
-            _logger.LogInformation($"Starting to work current SharingCode [ {user.LastKnownSharingCode} ] of uploader with SteamId [ {user.SteamId} ], requestedQuality [ {requestedQuality} ].");
+            _logger.LogInformation($"Starting to work current SharingCode [ {currentSharingCode} ] of uploader with SteamId [ {uploaderId} ], requestedQuality [ {requestedQuality} ].");
             var match = new MatchData
             {
-                SharingCode = user.LastKnownSharingCode,
-                UploaderId = user.SteamId,
+                SharingCode = currentSharingCode,
+                UploaderId = uploaderId,
                 AnalyzedQuality = requestedQuality,
             };
 
             // Put match into database and rabbit queue if it's new
             if (!_context.Matches.Any(x => (x.SharingCode == match.SharingCode) && x.AnalyzedQuality >= requestedQuality))
             {
-                _logger.LogInformation($"Publishing model with SharingCode [ {match.SharingCode} ] from uploader with SteamId [ {user.SteamId} ] to queue.");
+                _logger.LogInformation($"Publishing model with SharingCode [ {match.SharingCode} ] from uploader with SteamId [ {uploaderId} ] to queue.");
 
                 // Put match into rabbit queue with random correlationId
                 _rabbitProducer.PublishMessage(match.ToTransferModel());
@@ -120,34 +107,46 @@ namespace SharingCodeGatherer
         }
 
         /// <summary>
-        /// Attempts to get the next sharingCode and perform work on it.
+        /// Attempts to get the next sharingcode and, if found, updates user.LastKnownSharingCode (without writing to db) and runs WorkSharingCode on it. 
         /// </summary>
         /// <param name="user"></param>
-        /// <returns>bool, whether a match was found and inserted into the database</returns>
+        /// <returns>bool, whether a next sharingcode was found for this user</returns>
         public async Task<bool> WorkNextSharingCode(User user, AnalyzerQuality requestedQuality)
         {
+            bool foundNextSharingCode;
             try
             {
+                // attempt to get next sharingcode
                 user.LastKnownSharingCode = await _apiCommunicator.QueryNextSharingCode(user);
-                var matchFound = await WorkCurrentSharingCode(user, requestedQuality);
-                return matchFound;
+                foundNextSharingCode = true;
+
+                // try to insert match into database if this code was never seen before
+                var matchPublished = await WorkSharingCode(user.LastKnownSharingCode, user.SteamId, requestedQuality);
             }
             catch (NoMatchesFoundException e)
             {
-                return false;
+                foundNextSharingCode = false;
             }
+            return foundNextSharingCode;
         }
 
         /// <summary>
-        /// Does work on all matches that happened after the match of the currently set LastKnownSharingCode recursively.
+        /// Runs WorkNextSharingCode as long as new sharingcodes are found.
+        /// Also writes the newest user.LastKnownSharingCode to database.
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        public async Task WorkSharingCodesRecursivelyAndUpdateUser(User user, AnalyzerQuality requestedQuality)
+        public async Task WorkAllNewSharingCodesAndUpdateUser(User user, AnalyzerQuality requestedQuality, bool skipLastKnownMatch)
         {
-            while (await WorkNextSharingCode(user, requestedQuality))
-                ;
+            if (!skipLastKnownMatch)
+            {
+                await WorkSharingCode(user.LastKnownSharingCode, user.SteamId, requestedQuality);
+            }
 
+            // Work next sharingcode until we've reached the newest one of this user
+            while (await WorkNextSharingCode(user, requestedQuality));
+
+            // call saveChanges to write newest value for user.LastKnownSharingCode to database
             await _context.SaveChangesAsync();
         }
     }
