@@ -15,3 +15,4 @@ Steam API Key, required for [Valve's Match History API](https://developer.valves
 
 ## Additional Information
 - Upon Startup, this project runs migrations on MatchDb.
+- SharingCodes for different players of the same match are the same.
