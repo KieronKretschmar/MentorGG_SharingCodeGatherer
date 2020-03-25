@@ -137,8 +137,8 @@ namespace SharingCodeGatherer.Controllers
                 // perform work if at least one new sharingcode exist
                 if (foundNewSharingCode)
                 {
-                    // Work on all other matches of this user without awaiting the result
-                    _scWorker.WorkUser(user, requestedQuality);
+                    // Work through all new matches of this user
+                    await _scWorker.WorkUser(user, requestedQuality);
                 }
                 return foundNewSharingCode;
             }
