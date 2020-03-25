@@ -72,7 +72,6 @@ namespace SharingCodeGatherer
             queryString += $"key={ApiKey}&steamidkey={user.SteamAuthToken}&steamid={user.SteamId}&knowncode={user.LastKnownSharingCode}";
 
             var result = await Client.GetAsync(queryString);
-            //var result = Client.GetAsync(queryString).Result; // await doesn't work here, don't ask me why
 
             string content;
             switch (result.StatusCode)
@@ -84,6 +83,7 @@ namespace SharingCodeGatherer
                     var nextCode = jobject["result"]["nextcode"].ToString();
                     if (nextCode == "n/a")
                     {
+                        _logger.LogInformation($"No next SharingCode found following [ {user.LastKnownSharingCode} ] from uploader with SteamId [ {user.SteamId} ].");
                         throw new NoMatchesFoundException($"No new matches found for user {user.SteamId}");
                     }
                     _logger.LogInformation($"Found new SharingCode [ {nextCode} ] following [ {user.LastKnownSharingCode} ] from uploader with SteamId [ {user.SteamId} ].");

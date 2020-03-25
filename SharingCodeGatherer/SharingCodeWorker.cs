@@ -80,6 +80,7 @@ namespace SharingCodeGatherer
         /// <returns>bool, whether a next sharingcode was found for this user</returns>
         public async Task<bool> WorkNextSharingCode(User user, AnalyzerQuality requestedQuality)
         {
+            _logger.LogInformation($"Start WorkNextSharingCode for user with SteamId [ {user.SteamId} ]");
             bool foundNextSharingCode;
             try
             {
@@ -95,6 +96,7 @@ namespace SharingCodeGatherer
             {
                 foundNextSharingCode = false;
             }
+            _logger.LogInformation($"End WorkNextSharingCode for user with SteamId [ {user.SteamId} ]. Found next code: [ {foundNextSharingCode} ]");
             return foundNextSharingCode;
         }
 
@@ -106,7 +108,7 @@ namespace SharingCodeGatherer
         /// <returns></returns>
         public async Task WorkUser(User user, AnalyzerQuality requestedQuality)
         {
-            _logger.LogInformation($"Working user with SteamId [ {user.SteamId} ], requestedQuality [ {requestedQuality} ]");
+            _logger.LogInformation($"Start WorkUser for user with SteamId [ {user.SteamId} ], requestedQuality [ {requestedQuality} ]");
 
             // Work next sharingcode until we've reached the newest one of this user
             while (await WorkNextSharingCode(user, requestedQuality));
@@ -114,7 +116,7 @@ namespace SharingCodeGatherer
             // call saveChanges to write newest value for user.LastKnownSharingCode to database
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation($"Finished working user with SteamId [ {user.SteamId} ]");
+            _logger.LogInformation($"End WorkUser for user with SteamId [ {user.SteamId} ]");
         }
     }
 }
