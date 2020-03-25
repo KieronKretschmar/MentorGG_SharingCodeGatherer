@@ -66,7 +66,7 @@ namespace SharingCodeGatherer
             }
             else
             {
-                matchFound = await WorkCurrentSharingCode(user, requestedQuality);
+                matchFound = await WorkSharingCode(user.LastKnownSharingCode, user.SteamId, requestedQuality);
             }
 
 
@@ -86,21 +86,21 @@ namespace SharingCodeGatherer
         /// This implies: Getting the next sharingCode, updating the user object without saving changes to database, and, if a match is found, putting it into rabbit queue and database.
         /// </summary>
         /// <param name="user"></param>
-        /// <returns>bool, whether a match was found</returns>
-        public async Task<bool> WorkCurrentSharingCode(User user, AnalyzerQuality requestedQuality)
+        /// <returns>bool, whether the sharingcode was published to be (re-)analyzed.</returns>
+        public async Task<bool> WorkSharingCode(string currentSharingCode, long uploaderId, AnalyzerQuality requestedQuality)
         {
-            _logger.LogInformation($"Starting to work current SharingCode [ {user.LastKnownSharingCode} ] of uploader with SteamId [ {user.SteamId} ], requestedQuality [ {requestedQuality} ].");
+            _logger.LogInformation($"Starting to work current SharingCode [ {currentSharingCode} ] of uploader with SteamId [ {uploaderId} ], requestedQuality [ {requestedQuality} ].");
             var match = new MatchData
             {
-                SharingCode = user.LastKnownSharingCode,
-                UploaderId = user.SteamId,
+                SharingCode = currentSharingCode,
+                UploaderId = uploaderId,
                 AnalyzedQuality = requestedQuality,
             };
 
             // Put match into database and rabbit queue if it's new
             if (!_context.Matches.Any(x => (x.SharingCode == match.SharingCode) && x.AnalyzedQuality >= requestedQuality))
             {
-                _logger.LogInformation($"Publishing model with SharingCode [ {match.SharingCode} ] from uploader with SteamId [ {user.SteamId} ] to queue.");
+                _logger.LogInformation($"Publishing model with SharingCode [ {match.SharingCode} ] from uploader with SteamId [ {uploaderId} ] to queue.");
 
                 // Put match into rabbit queue with random correlationId
                 _rabbitProducer.PublishMessage(match.ToTransferModel());
@@ -123,14 +123,18 @@ namespace SharingCodeGatherer
         /// Attempts to get the next sharingCode and perform work on it.
         /// </summary>
         /// <param name="user"></param>
-        /// <returns>bool, whether a match was found and inserted into the database</returns>
+        /// <returns>bool, whether a new sharingcode was found for this user</returns>
         public async Task<bool> WorkNextSharingCode(User user, AnalyzerQuality requestedQuality)
         {
             try
             {
+                // attempt to get next sharingcode
                 user.LastKnownSharingCode = await _apiCommunicator.QueryNextSharingCode(user);
-                var matchFound = await WorkCurrentSharingCode(user, requestedQuality);
-                return matchFound;
+
+                // try to insert match into database if this code was never seen before
+                var matchPublished = await WorkSharingCode(user.LastKnownSharingCode, user.SteamId, requestedQuality);
+
+                return matchPublished;
             }
             catch (NoMatchesFoundException e)
             {
