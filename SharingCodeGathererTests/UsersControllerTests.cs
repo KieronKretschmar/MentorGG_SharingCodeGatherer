@@ -218,7 +218,7 @@ namespace SharingCodeGathererTests
                 // Call LookForMatches
                 var lfmResponse = await usersController.LookForMatches(user.SteamId, analyzerQuality);
                 // Verify that WorkUser was called
-                mockScWorker.Verify(x => x.WorkUser(It.Is<User>(x => x.SteamId == user.SteamId),analyzerQuality, true), Times.Once);
+                mockScWorker.Verify(x => x.WorkUser(It.Is<User>(x => x.SteamId == user.SteamId),analyzerQuality), Times.Once);
             }
         }
 
@@ -251,7 +251,7 @@ namespace SharingCodeGathererTests
                 // Mock IValveApiCommunicator such that it mimicks behaviour of invalid user auth Data
                 var mockScWorker = new Mock<ISharingCodeWorker>();
                 mockScWorker
-                    .Setup(x => x.WorkUser(It.Is<User>(x => x.SteamId == user.SteamId), It.Is<AnalyzerQuality>(x => x == analyzerQuality), It.Is<bool>(x => x == true)))
+                    .Setup(x => x.WorkUser(It.Is<User>(x => x.SteamId == user.SteamId), It.Is<AnalyzerQuality>(x => x == analyzerQuality)))
                     .Throws(new ValveApiCommunicator.InvalidUserAuthException(""));
 
                 // Create usersController

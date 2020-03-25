@@ -66,7 +66,7 @@ namespace SharingCodeGathererTests
 
                await Assert.ThrowsExceptionAsync<ValveApiCommunicator.InvalidApiKeyException>(async () =>
                {
-                   await scWorker.WorkUser(user, AnalyzerQuality.Low,true);
+                   await scWorker.WorkUser(user, AnalyzerQuality.Low);
                });
             }
 
