@@ -16,7 +16,7 @@ namespace SharingCodeGatherer
 {
     public interface ISharingCodeWorker
     {
-        Task<bool> WorkUser(User user, AnalyzerQuality requestedQuality, bool skipLastKnownMatch);
+        Task<bool> WorkUser(User user, AnalyzerQuality requestedQuality);
     }
 
     /// <summary>
@@ -42,9 +42,9 @@ namespace SharingCodeGatherer
         /// </summary>
         /// <param name="steamId"></param>
         /// <returns name="foundNewSharingCode">bool, whether at least one new match was found</returns>
-        public async Task<bool> WorkUser(User user, AnalyzerQuality requestedQuality, bool skipLastKnownMatch)
+        public async Task<bool> WorkUser(User user, AnalyzerQuality requestedQuality)
         {
-            _logger.LogInformation($"Working user with SteamId [ {user.SteamId} ], requestedQuality [ {requestedQuality} ] and skipLastKnownMatch [ {skipLastKnownMatch} ]");
+            _logger.LogInformation($"Working user with SteamId [ {user.SteamId} ], requestedQuality [ {requestedQuality} ]");
 
             // determine whether new sharingcodes exist for this user
             bool foundNewSharingCode;
@@ -62,7 +62,7 @@ namespace SharingCodeGatherer
             if (foundNewSharingCode)
             {
                 // Work on all other matches of this user without awaiting the result
-                WorkAllNewSharingCodesAndUpdateUser(user, requestedQuality, skipLastKnownMatch);
+                WorkAllNewSharingCodesAndUpdateUser(user, requestedQuality);
 
                 _logger.LogInformation($"Finished working user with SteamId [ {user.SteamId} ]");
             }
@@ -136,13 +136,8 @@ namespace SharingCodeGatherer
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        public async Task WorkAllNewSharingCodesAndUpdateUser(User user, AnalyzerQuality requestedQuality, bool skipLastKnownMatch)
+        public async Task WorkAllNewSharingCodesAndUpdateUser(User user, AnalyzerQuality requestedQuality)
         {
-            if (!skipLastKnownMatch)
-            {
-                await WorkSharingCode(user.LastKnownSharingCode, user.SteamId, requestedQuality);
-            }
-
             // Work next sharingcode until we've reached the newest one of this user
             while (await WorkNextSharingCode(user, requestedQuality));
 

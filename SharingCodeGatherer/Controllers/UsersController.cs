@@ -121,7 +121,7 @@ namespace SharingCodeGatherer.Controllers
             var user = _context.Users.Single(x => x.SteamId == steamId);
             try
             {
-                var foundMatch = await _scWorker.WorkUser(user, requestedQuality, true);
+                var foundMatch = await _scWorker.WorkUser(user, requestedQuality);
                 return foundMatch;
             }
             catch (ValveApiCommunicator.InvalidUserAuthException e)
