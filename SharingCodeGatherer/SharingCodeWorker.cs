@@ -123,23 +123,24 @@ namespace SharingCodeGatherer
         /// Attempts to get the next sharingCode and perform work on it.
         /// </summary>
         /// <param name="user"></param>
-        /// <returns>bool, whether a new sharingcode was found for this user</returns>
+        /// <returns>bool, whether a next sharingcode was found for this user</returns>
         public async Task<bool> WorkNextSharingCode(User user, AnalyzerQuality requestedQuality)
         {
+            bool foundNextSharingCode;
             try
             {
                 // attempt to get next sharingcode
                 user.LastKnownSharingCode = await _apiCommunicator.QueryNextSharingCode(user);
+                foundNextSharingCode = true;
 
                 // try to insert match into database if this code was never seen before
                 var matchPublished = await WorkSharingCode(user.LastKnownSharingCode, user.SteamId, requestedQuality);
-
-                return matchPublished;
             }
             catch (NoMatchesFoundException e)
             {
-                return false;
+                foundNextSharingCode = false;
             }
+            return foundNextSharingCode;
         }
 
         /// <summary>
