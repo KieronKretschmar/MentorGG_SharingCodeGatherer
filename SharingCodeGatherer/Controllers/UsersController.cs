@@ -126,6 +126,10 @@ namespace SharingCodeGatherer.Controllers
             }
             catch (ValveApiCommunicator.InvalidUserAuthException e)
             {
+                // Set user's authentication as invalid
+                user.Invalidated = true;
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
                 return Unauthorized("Invalid Auth data.");
             }
         }

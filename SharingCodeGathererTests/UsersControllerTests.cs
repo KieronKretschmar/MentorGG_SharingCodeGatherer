@@ -208,7 +208,7 @@ namespace SharingCodeGathererTests
                 await context.SaveChangesAsync();
             }
 
-            // Create valid user, call LookForMatches on him and verify that WorkUser was called
+            // Call LookForMatches on user and verify that WorkUser was called
             using (var context = new SharingCodeContext(options))
             {
                 var mockApiComm = new Mock<IValveApiCommunicator>();
@@ -219,6 +219,55 @@ namespace SharingCodeGathererTests
                 var lfmResponse = await usersController.LookForMatches(user.SteamId, analyzerQuality);
                 // Verify that WorkUser was called
                 mockScWorker.Verify(x => x.WorkUser(It.Is<User>(x => x.SteamId == user.SteamId),analyzerQuality, true), Times.Once);
+            }
+        }
+
+
+        /// <summary>
+        /// Tests GET: api/Users/<steamId>/LookForMatches with invalidated userdata, and asserts that the user becomes invalidated.
+        /// </summary>
+        /// <returns></returns>
+        [TestMethod]
+        public async Task LookForMatchesInvalidUserTest()
+        {
+            // ARRANGE
+
+            var options = TestHelper.GetDatabaseOptions("LookForMatchesTest");
+            var user = TestHelper.GetRandomUser();
+            var analyzerQuality = AnalyzerQuality.High;
+
+            // Create user
+            using (var context = new SharingCodeContext(options))
+            {
+                context.Users.Add(user);
+                await context.SaveChangesAsync();
+            }
+
+            using (var context = new SharingCodeContext(options))
+            {
+                // Create mocked dependencies
+                var mockApiComm = new Mock<IValveApiCommunicator>();
+
+                // Mock IValveApiCommunicator such that it mimicks behaviour of invalid user auth Data
+                var mockScWorker = new Mock<ISharingCodeWorker>();
+                mockScWorker
+                    .Setup(x => x.WorkUser(It.Is<User>(x => x.SteamId == user.SteamId), It.Is<AnalyzerQuality>(x => x == analyzerQuality), It.Is<bool>(x => x == true)))
+                    .Throws(new ValveApiCommunicator.InvalidUserAuthException(""));
+
+                // Create usersController
+                var usersController = new UsersController(context, mockScWorker.Object, mockApiComm.Object);
+
+                // ACT
+                // Call LookForMatches
+                var lfmResponse = await usersController.LookForMatches(user.SteamId, analyzerQuality);
+            }
+
+            // ASSERT
+            using (var context = new SharingCodeContext(options))
+            {
+                // Verify that the user was invalidated
+                var userFromDb = context.Users.Single();
+                Assert.IsTrue(userFromDb.Invalidated == true);
             }
         }
     }

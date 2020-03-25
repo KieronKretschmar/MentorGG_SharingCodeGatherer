@@ -60,6 +60,11 @@ namespace SharingCodeGatherer
             return true;
         }
 
+        /// <summary>
+        /// Queries the next SharingCode and throws exceptions if none are found.
+        /// </summary>
+        /// <param name="user"></param>
+        /// <returns></returns>
         public async Task<string> QueryNextSharingCode(User user)
         {
             _logger.LogInformation($"Looking for the next SharingCode following [ {user.LastKnownSharingCode} ] from uploader with SteamId [ {user.SteamId} ].");

@@ -41,44 +41,33 @@ namespace SharingCodeGatherer
         /// Gathers all matches of this user and inserts them into database and rabbit queue, and also updates the user's LastKnownSharingCode in database.
         /// </summary>
         /// <param name="steamId"></param>
-        /// <returns name="matchFound">bool, whether at least one new match was found</returns>
+        /// <returns name="foundNewSharingCode">bool, whether at least one new match was found</returns>
         public async Task<bool> WorkUser(User user, AnalyzerQuality requestedQuality, bool skipLastKnownMatch)
         {
             _logger.LogInformation($"Working user with SteamId [ {user.SteamId} ], requestedQuality [ {requestedQuality} ] and skipLastKnownMatch [ {skipLastKnownMatch} ]");
 
-            // Perform work on this or the next match
-            bool matchFound;
-
-            if (skipLastKnownMatch)
+            // determine whether new sharingcodes exist for this user
+            bool foundNewSharingCode;
+            try
             {
-                try
-                {
-                    matchFound = await WorkNextSharingCode(user, requestedQuality);
-                }
-                catch (ValveApiCommunicator.InvalidUserAuthException)
-                {
-                    // Set user's authentication as invalid
-                    user.Invalidated = true;
-                    _context.Users.Update(user);
-                    await _context.SaveChangesAsync();
-                    throw;
-                }
+                string newSharingCode = await _apiCommunicator.QueryNextSharingCode(user);
+                foundNewSharingCode = true;
             }
-            else
+            catch (NoMatchesFoundException)
             {
-                matchFound = await WorkSharingCode(user.LastKnownSharingCode, user.SteamId, requestedQuality);
+                foundNewSharingCode = false;
             }
 
+            // perform work if at least one new sharingcode exist
+            if (foundNewSharingCode)
+            {
+                // Work on all other matches of this user without awaiting the result
+                WorkAllNewSharingCodesAndUpdateUser(user, requestedQuality, skipLastKnownMatch);
 
-            // Update user
-            _context.SaveChangesAsync();
+                _logger.LogInformation($"Finished working user with SteamId [ {user.SteamId} ]");
+            }
 
-            // Work on all other matches of this user without awaiting the result
-            WorkAllNewSharingCodesAndUpdateUser(user, requestedQuality);
-
-            _logger.LogInformation($"Finished working user with SteamId [ {user.SteamId} ]");
-
-            return matchFound;
+            return foundNewSharingCode;
         }
 
         /// <summary>
@@ -147,8 +136,13 @@ namespace SharingCodeGatherer
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        public async Task WorkAllNewSharingCodesAndUpdateUser(User user, AnalyzerQuality requestedQuality)
+        public async Task WorkAllNewSharingCodesAndUpdateUser(User user, AnalyzerQuality requestedQuality, bool skipLastKnownMatch)
         {
+            if (!skipLastKnownMatch)
+            {
+                await WorkSharingCode(user.LastKnownSharingCode, user.SteamId, requestedQuality);
+            }
+
             // Work next sharingcode until we've reached the newest one of this user
             while (await WorkNextSharingCode(user, requestedQuality));
 
