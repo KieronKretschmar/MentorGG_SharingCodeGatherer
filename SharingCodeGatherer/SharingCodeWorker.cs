@@ -16,6 +16,7 @@ namespace SharingCodeGatherer
 {
     public interface ISharingCodeWorker
     {
+        Task<bool> WorkSharingCode(string currentSharingCode, long uploaderId, AnalyzerQuality requestedQuality);
         Task WorkUser(User user, AnalyzerQuality requestedQuality);
     }
 
