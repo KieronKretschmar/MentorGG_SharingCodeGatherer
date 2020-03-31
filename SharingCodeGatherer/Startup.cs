@@ -68,7 +68,7 @@ namespace SharingCodeGatherer
             #region Database
 
             // if a connectionString is set use mysql, else use InMemory
-            var connString = Configuration.GetValue<string>("MYSQL_CONNECTION_STRING");
+            var connString = GetRequiredEnvironmentVariable<string>(Configuration, "MYSQL_CONNECTION_STRING");
             if (connString != null)
             {
                 services.AddDbContext<Database.SharingCodeContext>(o => { o.UseMySql(connString); });
@@ -96,17 +96,11 @@ namespace SharingCodeGatherer
 
             #region RabbitMQ
 
-            var AMQP_URI = Configuration.GetValue<string>("AMQP_URI");
-            if(AMQP_URI == null)
-                throw new ArgumentException("AMQP_URI is missing, configure the `AMQP_URI` enviroment variable.");
-
-            var AMQP_SHARINGCODE_QUEUE = Configuration.GetValue<string>("AMQP_SHARINGCODE_QUEUE");
-            if (AMQP_SHARINGCODE_QUEUE == null)
-                throw new ArgumentException("AMQP_SHARINGCODE_QUEUE is missing, configure the `AMQP_SHARINGCODE_QUEUE` enviroment variable.");
+            var AMQP_URI = GetRequiredEnvironmentVariable<string>(Configuration, "AMQP_URI");
+            var AMQP_SHARINGCODE_QUEUE = GetRequiredEnvironmentVariable<string>(Configuration, "AMQP_SHARINGCODE_QUEUE");
 
             // Create producer
             var connection = new QueueConnection(AMQP_URI, AMQP_SHARINGCODE_QUEUE);
-
             services.AddSingleton<IProducer<SharingCodeInstruction>>(sp =>
             {
                 return new Producer<SharingCodeInstruction>(connection);
@@ -149,5 +143,25 @@ namespace SharingCodeGatherer
                 services.GetRequiredService<SharingCodeContext>().Database.Migrate();
             }
         }
+
+         /// <summary>
+         /// Attempt to retrieve an Environment Variable
+         /// Throws ArgumentNullException is not found.
+         /// </summary>
+         /// <typeparam name="T">Type to retreive</typeparam>
+         private static T GetRequiredEnvironmentVariable<T>(IConfiguration config, string key)
+         {
+             T value = config.GetValue<T>(key);
+             if (value == null)
+             {
+                 throw new ArgumentNullException(
+                     $"{key} is missing, Configure the `{key}` environment variable.");
+             }
+             else
+             {
+                 return value;
+             }
+         }
+
     }
 }
