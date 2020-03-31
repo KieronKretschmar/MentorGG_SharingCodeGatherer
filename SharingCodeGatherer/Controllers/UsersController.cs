@@ -85,6 +85,9 @@ namespace SharingCodeGatherer.Controllers
                 return BadRequest();
             }
 
+            // Upload the first match that would otherwise be skipped, defaulting to Low quality
+            await _scWorker.WorkSharingCode(user.LastKnownSharingCode, user.SteamId, AnalyzerQuality.Low);
+
             // Update UserDb
             await _context.SaveChangesAsync();
             return Ok();
