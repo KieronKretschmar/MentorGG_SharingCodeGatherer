@@ -18,6 +18,7 @@ using RabbitCommunicationLib.Interfaces;
 using RabbitCommunicationLib.Producer;
 using RabbitCommunicationLib.Queues;
 using RabbitCommunicationLib.TransferModels;
+using SharingCodeGatherer.Middleware;
 
 namespace SharingCodeGatherer
 {
@@ -127,6 +128,8 @@ namespace SharingCodeGatherer
             {
                 endpoints.MapControllers();
             });
+
+            app.UseMiddleware(typeof(ErrorHandlingMiddleware));
 
             #region Swagger
             app.UseSwagger();
