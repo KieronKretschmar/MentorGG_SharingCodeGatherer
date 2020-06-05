@@ -18,5 +18,19 @@ namespace Entities.Models
 
         public virtual Match Match { get; set; }
         public virtual User Uploader { get; set; }
+
+        // Parameterless constructor for EF Core
+        public Upload()
+        {
+
+        }
+
+        public Upload(Match match, long uploaderId, AnalyzerQuality quality)
+        {
+            InternalMatchId = match.Id;
+            SteamId = uploaderId;
+            UploadTime = DateTime.UtcNow;
+            Quality = quality;
+        }
     }
 }
