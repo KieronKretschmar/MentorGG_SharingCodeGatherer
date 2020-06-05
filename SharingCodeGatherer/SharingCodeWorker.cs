@@ -53,24 +53,34 @@ namespace SharingCodeGatherer
             };
 
             // Put match into database and rabbit queue if it's new
-            if (!_context.Matches.Any(x => (x.SharingCode == match.SharingCode) && x.AnalyzedQuality >= requestedQuality))
+            var existingMatch = _context.Matches.FirstOrDefault(x => (x.SharingCode == match.SharingCode));
+            if (existingMatch == null)
             {
+                // Put match into rabbit queue
                 _logger.LogInformation($"Publishing model with SharingCode [ {match.SharingCode} ] from uploader with SteamId [ {uploaderId} ] to queue.");
-
-                // Put match into rabbit queue with random correlationId
                 _rabbitProducer.PublishMessage(match.ToTransferModel());
 
                 // put match into database
+                _logger.LogInformation($"Inserting Match including Upload with SharingCode [ {match.SharingCode} ] into database.");
                 var dbMatch = match.ToDatabaseModel();
-                _logger.LogInformation($"Inserting match with SharingCode [ {match.SharingCode} ] into database.");
-                _context.Matches.Add(dbMatch);
-
-                // Add upload to Upload table
                 var upload = new Upload(dbMatch, uploaderId, requestedQuality);
-                _context.Uploads.Add(upload);
+                dbMatch.Uploads = new List<Upload> { upload };
+                _context.Matches.Add(dbMatch);
 
                 await _context.SaveChangesAsync();
                 return true;
+            }
+            // Trigger re-analysis if higher quality is requested
+            else if(existingMatch != null && existingMatch.AnalyzedQuality < requestedQuality)
+            {
+                // Put match into rabbit queue
+                _logger.LogInformation($"Publishing model with SharingCode [ {match.SharingCode} ] from uploader with SteamId [ {uploaderId} ] to queue for re-analysis. RequestedQuality: [ {requestedQuality} ].");
+                _rabbitProducer.PublishMessage(match.ToTransferModel());
+
+                _logger.LogInformation($"Inserting new Upload for match with SharingCode [ {match.SharingCode} ] into database.");
+                var upload = new Upload(existingMatch, uploaderId, requestedQuality);
+                existingMatch.Uploads.Add(upload);
+                await _context.SaveChangesAsync();
             }
             else
             {
