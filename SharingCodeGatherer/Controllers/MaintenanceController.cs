@@ -32,7 +32,7 @@ namespace SharingCodeGatherer.Controllers
         }
 
         /// <summary>
-        /// Publishes messages for the first up to <paramref name="count"/> matches that have an InternalMatchId <paramref name="internalMatchId"/> or higher.
+        /// Re-Publishes messages for the first up to <paramref name="count"/> matches that have an InternalMatchId <paramref name="internalMatchId"/> or higher.
         /// </summary>
         /// <param name="internalMatchId"></param>
         /// <param name="count"></param>
@@ -42,7 +42,6 @@ namespace SharingCodeGatherer.Controllers
         {
             _logger.LogInformation($"ResendFromInternalMatchId called with internalMatchId [ {internalMatchId} ] and count [ {count} ].");
 
-            // Load matches with last known uploader
             var matches = _context.Matches
                 .Where(x => x.Id >= internalMatchId)
                 .Take(count)
@@ -70,6 +69,40 @@ namespace SharingCodeGatherer.Controllers
             }
 
             var msg = $"Resent [ {matches.Count} ] matches with InternalMatchId between [ {matches.FirstOrDefault()?.Id} ] and [ {matches.LastOrDefault()?.Id} ].";
+            _logger.LogInformation(msg);
+            return Ok(msg);
+        }
+
+        /// <summary>
+        /// Re-publishes messages sent between <paramref name="startDate"/> and <paramref name="endDate"/>.
+        /// </summary>
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <returns></returns>
+        [HttpPost("resend/timeframe")]
+        public ActionResult ResendByTimeFrame(DateTime startDate, DateTime endDate)
+        {
+            _logger.LogInformation($"ResendFromInternalMatchId called with startDate [ {startDate} ] and endDate [ {endDate} ].");
+
+            var uploads = _context.Uploads
+                .Include(x=>x.Match)
+                .Include(x=>x.Uploader)
+                .Where(x => startDate <= x.UploadTime && x.UploadTime <= endDate)
+                .ToList();
+
+            foreach (var upload in uploads)
+            {
+                var message = new SharingCodeInstruction
+                {
+                    SharingCode = upload.Match.SharingCode,
+                    UploaderId = upload.Uploader.SteamId,
+                    UploadType = RabbitCommunicationLib.Enums.UploadType.SharingCodeGatherer
+                };
+
+                _producer.PublishMessage(message);
+            }
+
+            var msg = $"Resent [ {uploads.Count} ] matches with startDate [ {startDate} ] and endDate [ {endDate} ].";
             _logger.LogInformation(msg);
             return Ok(msg);
         }
