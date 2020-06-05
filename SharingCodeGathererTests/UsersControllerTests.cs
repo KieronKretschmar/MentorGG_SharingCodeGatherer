@@ -49,7 +49,7 @@ namespace SharingCodeGathererTests
             // Call PostUser to create valid user
             using (var context = new SharingCodeContext(options))
             {
-                var usersController = new UsersController(context, mockScWorker.Object, mockApiComm.Object);
+                var usersController = new UsersController(new Mock<ILogger<UsersController>>().Object, context, mockScWorker.Object, mockApiComm.Object);
 
                 var result = await usersController.CreateUser(user.SteamId, user.SteamAuthToken, user.LastKnownSharingCode);
                 Assert.IsInstanceOfType(result, typeof(Microsoft.AspNetCore.Mvc.OkResult));
@@ -87,7 +87,7 @@ namespace SharingCodeGathererTests
             // Call PostUser in attempt to create invalid user
             using (var context = new SharingCodeContext(options))
             {
-                var usersController = new UsersController(context, mockScWorker.Object, mockApiComm.Object);
+                var usersController = new UsersController(new Mock<ILogger<UsersController>>().Object, context, mockScWorker.Object, mockApiComm.Object);
 
                 var result = await usersController.CreateUser(user.SteamId, user.SteamAuthToken, user.LastKnownSharingCode);
                 Assert.IsInstanceOfType(result, typeof(Microsoft.AspNetCore.Mvc.BadRequestResult));
@@ -136,7 +136,7 @@ namespace SharingCodeGathererTests
             };
             using (var context = new SharingCodeContext(options))
             {
-                var usersController = new UsersController(context, mockScWorker.Object, mockApiComm.Object);
+                var usersController = new UsersController(new Mock<ILogger<UsersController>>().Object, context, mockScWorker.Object, mockApiComm.Object);
                 var result = await usersController.CreateUser(updatedUser.SteamId, updatedUser.SteamAuthToken, updatedUser.LastKnownSharingCode);
 
                 Assert.IsInstanceOfType(result, typeof(Microsoft.AspNetCore.Mvc.OkResult));
@@ -177,7 +177,7 @@ namespace SharingCodeGathererTests
                 var mockApiComm = new Mock<IValveApiCommunicator>();
                 var mockScWorker = new Mock<ISharingCodeWorker>();
 
-                var usersController = new UsersController(context, mockScWorker.Object, mockApiComm.Object);
+                var usersController = new UsersController(new Mock<ILogger<UsersController>>().Object, context, mockScWorker.Object, mockApiComm.Object);
                 var result = await usersController.DeleteUser(user.SteamId);
                 Assert.IsInstanceOfType(result, typeof(Microsoft.AspNetCore.Mvc.OkResult));
             }
@@ -213,7 +213,7 @@ namespace SharingCodeGathererTests
             {
                 var mockApiComm = new Mock<IValveApiCommunicator>();
                 var mockScWorker = new Mock<ISharingCodeWorker>();
-                var usersController = new UsersController(context, mockScWorker.Object, mockApiComm.Object);
+                var usersController = new UsersController(new Mock<ILogger<UsersController>>().Object, context, mockScWorker.Object, mockApiComm.Object);
 
                 // Call LookForMatches
                 var lfmResponse = await usersController.LookForMatches(user.SteamId, analyzerQuality);
@@ -255,7 +255,7 @@ namespace SharingCodeGathererTests
                     .Throws(new ValveApiCommunicator.InvalidUserAuthException(""));
 
                 // Create usersController
-                var usersController = new UsersController(context, mockScWorker.Object, mockApiComm.Object);
+                var usersController = new UsersController(new Mock<ILogger<UsersController>>().Object, context, mockScWorker.Object, mockApiComm.Object);
 
                 // ACT
                 // Call LookForMatches

@@ -7,6 +7,7 @@ using Entities.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RabbitCommunicationLib.Enums;
 using static SharingCodeGatherer.ValveApiCommunicator;
 
@@ -16,12 +17,18 @@ namespace SharingCodeGatherer.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
+        private readonly ILogger<UsersController> _logger;
         private readonly SharingCodeContext _context;
         private readonly ISharingCodeWorker _scWorker;
         private readonly IValveApiCommunicator _apiCommunicator;
 
-        public UsersController(SharingCodeContext context, ISharingCodeWorker scWorker, IValveApiCommunicator valveApiCommunicator)
+        public UsersController(
+            ILogger<UsersController> logger,
+            SharingCodeContext context, 
+            ISharingCodeWorker scWorker, 
+            IValveApiCommunicator valveApiCommunicator)
         {
+            _logger = logger;
             _context = context;
             _scWorker = scWorker;
             _apiCommunicator = valveApiCommunicator;
@@ -36,6 +43,8 @@ namespace SharingCodeGatherer.Controllers
         [HttpGet("{steamId}")]
         public async Task<ActionResult<User>> GetUser(long steamId)
         {
+            _logger.LogInformation($"Called GetUser for SteamId [ {steamId} ].");
+
             var user = await _context.Users.FindAsync(steamId);
 
             if (user == null)
@@ -56,6 +65,8 @@ namespace SharingCodeGatherer.Controllers
         [HttpPost("{steamId}")]
         public async Task<ActionResult> CreateUser(long steamId, string steamAuthToken, string lastKnownSharingCode)
         {
+            _logger.LogInformation($"Called CreateUser for SteamId [ {steamId} ], SteamAuthToken [ {steamAuthToken} ] and LastKnownSharingCode [ {lastKnownSharingCode} ].");
+
             // Create or update user, assuming data is valid and without saving changes before
             var user = await _context.Users.FindAsync(steamId);
             if (user == null)
@@ -101,6 +112,8 @@ namespace SharingCodeGatherer.Controllers
         [HttpDelete("{steamId}")]
         public async Task<ActionResult> DeleteUser(long steamId)
         {
+            _logger.LogInformation($"Called DeleteUser for [ {steamId} ].");
+
             var user = await _context.Users.FindAsync(steamId);
             if (user == null)
             {
@@ -121,6 +134,8 @@ namespace SharingCodeGatherer.Controllers
         [HttpPost("{steamId}/look-for-matches")]
         public async Task<ActionResult<bool>> LookForMatches(long steamId, AnalyzerQuality requestedQuality)
         {
+            _logger.LogInformation($"Called LookForMatches for [ {steamId} ] with RequestedQuality [ {requestedQuality} ].");
+
             // Get user
             var user = _context.Users.Single(x => x.SteamId == steamId);
             try

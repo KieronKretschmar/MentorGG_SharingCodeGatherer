@@ -63,7 +63,12 @@ namespace SharingCodeGatherer
                 // put match into database
                 var dbMatch = match.ToDatabaseModel();
                 _logger.LogInformation($"Inserting match with SharingCode [ {match.SharingCode} ] into database.");
-                await _context.Matches.AddAsync(dbMatch);
+                _context.Matches.Add(dbMatch);
+
+                // Add upload to Upload table
+                var upload = new Upload(dbMatch, uploaderId, requestedQuality);
+                _context.Uploads.Add(upload);
+
                 await _context.SaveChangesAsync();
                 return true;
             }
