@@ -10,5 +10,6 @@ namespace Entities.Models
         public string SteamAuthToken { get; set; }
         public string LastKnownSharingCode { get; set; }
         public bool Invalidated { get; set; } = false;
+        public virtual ICollection<Upload> Uploads { get; set; }
     }
 }

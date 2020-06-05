@@ -3,14 +3,16 @@ using System;
 using Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Database.Migrations
 {
     [DbContext(typeof(SharingCodeContext))]
-    partial class SharingCodeContextModelSnapshot : ModelSnapshot
+    [Migration("20200605073943_add-upload-table")]
+    partial class adduploadtable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -40,11 +42,11 @@ namespace Database.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<int>("InternalMatchId")
-                        .HasColumnType("int");
-
                     b.Property<byte>("Quality")
                         .HasColumnType("tinyint unsigned");
+
+                    b.Property<string>("SharingCode")
+                        .HasColumnType("longtext CHARACTER SET utf8mb4");
 
                     b.Property<long>("SteamId")
                         .HasColumnType("bigint");
@@ -53,10 +55,6 @@ namespace Database.Migrations
                         .HasColumnType("datetime(6)");
 
                     b.HasKey("UploadId");
-
-                    b.HasIndex("InternalMatchId");
-
-                    b.HasIndex("SteamId");
 
                     b.ToTable("Uploads");
                 });
@@ -79,21 +77,6 @@ namespace Database.Migrations
                     b.HasKey("SteamId");
 
                     b.ToTable("Users");
-                });
-
-            modelBuilder.Entity("Entities.Models.Upload", b =>
-                {
-                    b.HasOne("Entities.Models.Match", "Match")
-                        .WithMany("Uploads")
-                        .HasForeignKey("InternalMatchId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Entities.Models.User", "Uploader")
-                        .WithMany("Uploads")
-                        .HasForeignKey("SteamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }
